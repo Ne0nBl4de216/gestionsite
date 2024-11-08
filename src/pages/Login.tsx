@@ -1,43 +1,85 @@
 import React, { useState, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
-import { Mail, Lock, CheckCircle2 } from 'lucide-react';
+import { Navigate, useSearchParams } from 'react-router-dom';
+import { MailIcon, LockIcon, CheckCircle2Icon } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
-import axios from 'axios';
+import { authApi } from '../services/api';
 
 export const Login = () => {
   const [email, setEmail] = useState('');
   const [step, setStep] = useState<'email' | 'verification' | 'password'>('email');
   const [password, setPassword] = useState('');
   const [isEmailVerified, setIsEmailVerified] = useState(false);
-  const { setEmail: setAuthEmail, setPassword: setAuthPassword, setIp, setVerified, setLoggedIn, isLoggedIn } = useAuthStore();
+  const [error, setError] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  
+  const { 
+    isLoggedIn,
+    actions: { setEmail: setAuthEmail, setPassword: setAuthPassword, setIp, setVerified, setLoggedIn }
+  } = useAuthStore();
 
   useEffect(() => {
-    // Obtenir l'IP de l'utilisateur
-    const getIp = async () => {
-      try {
-        const response = await axios.get('https://api.ipify.org?format=json');
-        setIp(response.data.ip);
-      } catch (error) {
-        console.error('Erreur lors de la récupération de l\'IP:', error);
-        setIp('Non disponible');
+    const verified = searchParams.get('verified');
+    if (verified === 'true') {
+      setIsEmailVerified(true);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+
+    const checkVerification = async () => {
+      if (email && step === 'verification' && !isEmailVerified) {
+        try {
+          const { verified } = await authApi.checkVerificationStatus(email);
+          if (verified) {
+            setIsEmailVerified(true);
+          }
+        } catch (error) {
+          console.error('Error checking verification:', error);
+        }
       }
     };
-    getIp();
-  }, []);
+
+    if (step === 'verification' && !isEmailVerified) {
+      intervalId = setInterval(checkVerification, 3000);
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [email, step, isEmailVerified]);
+
+  useEffect(() => {
+    const initializeIp = async () => {
+      try {
+        const ip = await authApi.getIpAddress();
+        setIp(ip);
+      } catch (error) {
+        console.error('Error getting IP:', error);
+        setIp('Not available');
+      }
+    };
+
+    initializeIp();
+  }, [setIp]);
 
   if (isLoggedIn) {
     return <Navigate to="/" replace />;
   }
 
-  const handleEmailSubmit = (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setAuthEmail(email);
-    alert("Un email de vérification a été envoyé à " + email);
-    setStep('verification');
-    
-    setTimeout(() => {
-      setIsEmailVerified(true);
-    }, 3000);
+    setError(null);
+
+    try {
+      await authApi.sendVerificationEmail(email);
+      setAuthEmail(email);
+      setStep('verification');
+    } catch (error) {
+      setError('Failed to send verification email. Please try again.');
+    }
   };
 
   const handleVerificationContinue = () => {
@@ -55,13 +97,19 @@ export const Login = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Bienvenue</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Welcome</h1>
           <p className="text-gray-600 mt-2">
-            {step === 'email' && "Commencez par entrer votre email"}
-            {step === 'verification' && "Vérifiez votre email"}
-            {step === 'password' && "Créez votre mot de passe"}
+            {step === 'email' && "Start by entering your email"}
+            {step === 'verification' && "Check your email"}
+            {step === 'password' && "Create your password"}
           </p>
         </div>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
+            {error}
+          </div>
+        )}
 
         {step === 'email' && (
           <form onSubmit={handleEmailSubmit} className="space-y-6">
@@ -70,14 +118,14 @@ export const Login = () => {
                 Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                <MailIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="votre@email.com"
+                  placeholder="your@email.com"
                 />
               </div>
             </div>
@@ -85,7 +133,7 @@ export const Login = () => {
               type="submit"
               className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors"
             >
-              Continuer
+              Continue
             </button>
           </form>
         )}
@@ -94,12 +142,12 @@ export const Login = () => {
           <div className="text-center space-y-6">
             <div className="flex flex-col items-center space-y-4">
               <div className={`p-4 rounded-full ${isEmailVerified ? 'bg-green-100' : 'bg-gray-100'}`}>
-                <CheckCircle2 
+                <CheckCircle2Icon 
                   className={`w-8 h-8 ${isEmailVerified ? 'text-green-500' : 'text-gray-400'}`} 
                 />
               </div>
               <p className="text-gray-600">
-                Un email a été envoyé à <span className="font-medium">{email}</span>
+                A verification email has been sent to <span className="font-medium">{email}</span>
               </p>
             </div>
             <button
@@ -111,7 +159,7 @@ export const Login = () => {
                   : 'bg-gray-200 text-gray-500 cursor-not-allowed'
               }`}
             >
-              {isEmailVerified ? 'Continuer' : 'En attente de la vérification'}
+              {isEmailVerified ? 'Continue' : 'Waiting for verification...'}
             </button>
           </div>
         )}
@@ -120,17 +168,17 @@ export const Login = () => {
           <form onSubmit={handlePasswordSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Créez votre mot de passe
+                Create your password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                <LockIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                 <input
                   type="password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Mot de passe"
+                  placeholder="Password"
                   minLength={8}
                 />
               </div>
@@ -139,7 +187,7 @@ export const Login = () => {
               type="submit"
               className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors"
             >
-              Créer mon compte
+              Create my account
             </button>
           </form>
         )}

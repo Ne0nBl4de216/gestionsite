@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../store/authStore';
-import { Mail, Key, Shield, Eye, EyeOff } from 'lucide-react';
+import { MailIcon, KeyIcon, ShieldIcon, EyeIcon, EyeOffIcon } from 'lucide-react';
 
 export const Dashboard = () => {
   const { email, password, ip } = useAuthStore();
@@ -24,7 +24,7 @@ export const Dashboard = () => {
             onClick={onToggleSecret}
             className="ml-auto text-gray-500 hover:text-gray-700 transition-colors"
           >
-            {showSecret ? <EyeOff size={20} /> : <Eye size={20} />}
+            {showSecret ? <EyeOffIcon size={20} /> : <EyeIcon size={20} />}
           </button>
         )}
       </div>
@@ -54,7 +54,7 @@ export const Dashboard = () => {
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <InfoCard
-          icon={Mail}
+          icon={MailIcon}
           title="Email"
           value={email}
           isSecret={false}
@@ -63,8 +63,8 @@ export const Dashboard = () => {
         />
 
         <InfoCard
-          icon={Key}
-          title="Mot de passe"
+          icon={KeyIcon}
+          title="Password"
           value={password}
           isSecret={true}
           showSecret={showPassword}
@@ -72,7 +72,7 @@ export const Dashboard = () => {
         />
 
         <InfoCard
-          icon={Shield}
+          icon={ShieldIcon}
           title="IP"
           value={ip}
           isSecret={true}

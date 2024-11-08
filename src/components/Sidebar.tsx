@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, LayoutDashboard, LogOut } from 'lucide-react';
+import { HomeIcon, LayoutDashboardIcon, LogOutIcon } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 
 export const Sidebar = () => {
@@ -9,7 +9,7 @@ export const Sidebar = () => {
   return (
     <div className="h-screen w-64 bg-gray-900 text-white p-6">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold">Mon App</h1>
+        <h1 className="text-2xl font-bold">My App</h1>
       </div>
       
       <nav className="space-y-4">
@@ -21,8 +21,8 @@ export const Sidebar = () => {
             }`
           }
         >
-          <Home size={20} />
-          <span>Accueil</span>
+          <HomeIcon size={20} />
+          <span>Home</span>
         </NavLink>
         
         <NavLink
@@ -33,7 +33,7 @@ export const Sidebar = () => {
             }`
           }
         >
-          <LayoutDashboard size={20} />
+          <LayoutDashboardIcon size={20} />
           <span>Dashboard</span>
         </NavLink>
         
@@ -41,8 +41,8 @@ export const Sidebar = () => {
           onClick={logout}
           className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-800 w-full text-left text-red-400"
         >
-          <LogOut size={20} />
-          <span>Déconnexion</span>
+          <LogOutIcon size={20} />
+          <span>Logout</span>
         </button>
       </nav>
     </div>

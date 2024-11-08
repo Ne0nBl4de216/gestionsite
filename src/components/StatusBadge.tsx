@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2, AlertCircle, XCircle, Clock } from 'lucide-react';
+import { CheckCircle2Icon, AlertCircleIcon, XCircleIcon, ClockIcon } from 'lucide-react';
 
 type StatusType = 'online' | 'offline' | 'verifying' | 'suspended';
 
@@ -10,26 +10,26 @@ interface StatusBadgeProps {
 
 const statusConfig = {
   online: {
-    icon: CheckCircle2,
-    text: 'En ligne et prêt !',
+    icon: CheckCircle2Icon,
+    text: 'Online and ready!',
     color: 'bg-green-100 text-green-700',
     pulse: true
   },
   offline: {
-    icon: XCircle,
-    text: 'Hors ligne :/',
+    icon: XCircleIcon,
+    text: 'Offline :/',
     color: 'bg-gray-100 text-gray-700',
     pulse: false
   },
   verifying: {
-    icon: Clock,
-    text: 'En vérification',
+    icon: ClockIcon,
+    text: 'Verifying',
     color: 'bg-blue-100 text-blue-700',
     pulse: true
   },
   suspended: {
-    icon: AlertCircle,
-    text: 'Suspendu temporairement',
+    icon: AlertCircleIcon,
+    text: 'Temporarily suspended',
     color: 'bg-red-100 text-red-700',
     pulse: false
   }
